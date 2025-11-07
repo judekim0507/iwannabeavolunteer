@@ -131,22 +131,18 @@
 <main class="w-full h-full">
   {#if loading}
     <div class="space-y-8 animate-pulse">
-      <!-- Shimmer countdown -->
       <div class="flex items-center gap-4">
         <div class="h-5 w-28 bg-neutral-200 rounded"></div>
         <div class="h-[14px] flex-1 bg-neutral-200 rounded-full"></div>
       </div>
 
-      <!-- Shimmer title -->
       <div class="h-8 w-64 bg-neutral-200 rounded"></div>
 
-      <!-- Shimmer event pill -->
       <div class="space-y-4">
         <div class="h-4 w-40 bg-neutral-200 rounded"></div>
         <div class="h-16 w-full bg-neutral-200 rounded-[73px]"></div>
       </div>
 
-      <!-- Shimmer yes/no -->
       <div class="space-y-4">
         <div class="h-4 w-56 bg-neutral-200 rounded"></div>
         <div class="flex gap-2">
@@ -155,13 +151,11 @@
         </div>
       </div>
 
-      <!-- Shimmer name input -->
       <div class="space-y-4">
         <div class="h-4 w-32 bg-neutral-200 rounded"></div>
         <div class="h-16 w-full bg-neutral-200 rounded-[73px]"></div>
       </div>
 
-      <!-- Shimmer submit -->
       <div class="space-y-3 text-center">
         <div class="h-16 w-full bg-neutral-200 rounded-[73px]"></div>
       </div>
@@ -212,7 +206,7 @@
       </p>
       <button
         type="button"
-        class="mt-6 h-12 px-8 rounded-[73px] border-[3px] border-[#f2f2f2] bg-white font-['Nunito'] font-bold text-[16px] text-[#333] hover:bg-[#f8f8f8] transition"
+        class="mt-6 h-12 px-8 rounded-[73px] border-[3px] border-[#f2f2f2] bg-white font-['Nunito'] font-bold text-[16px] text-[#333] hover:bg-[#f8f8f8] transition outline-none"
         onclick={() => {
           isDuplicate = false;
           fullName = "";
@@ -233,7 +227,7 @@
       </p>
       <button
         type="button"
-        class="mt-6 h-12 px-8 rounded-[73px] border-[3px] border-[#f2f2f2] bg-white font-['Nunito'] font-bold text-[16px] text-[#333] hover:bg-[#f8f8f8] transition"
+        class="mt-6 h-12 px-8 rounded-[73px] border-[3px] border-[#f2f2f2] bg-white font-['Nunito'] font-bold text-[16px] text-[#333] hover:bg-[#f8f8f8] transition outline-none"
         onclick={() => (submitted = false)}
       >
         Okay! TYSM JUDE!!!
@@ -247,7 +241,6 @@
         </div>
       {/if}
 
-      <!-- Countdown + progress -->
       {#if activeEvent.ends_at}
         <div class="flex items-center gap-3">
           <p
@@ -265,7 +258,6 @@
         </div>
       {/if}
 
-      <!-- Title -->
       <h1
         class="font-['Nunito'] font-black text-[32px] leading-none tracking-[-0.02em] text-[#020202] cursor-default"
         ontouchstart={(e) => {
@@ -306,14 +298,13 @@
         I wanna be a volunteer
       </h1>
 
-      <!-- You are applying for -->
       <div class="space-y-4">
         <p class="font-['Inter'] text-[16px] tracking-[-0.02em] text-[#333]">
           You are applying for...
         </p>
         <div class="flex justify-center">
           <div
-            class="w-full h-16 rounded-[73px] border-[3px] border-[#fba24d] bg-[#ffeedd] px-[44px] flex items-center justify-center gap-2 text-[#333]"
+            class="w-full h-16 rounded-[73px] border-[3px] border-[#fba24d] bg-[#ffeedd] px-[44px] flex items-center justify-center gap-2 text-[#333] cursor-pointer"
           >
             {#if activeEvent.emoji}
               <span class="text-[22px]">{activeEvent.emoji}</span>
@@ -328,7 +319,6 @@
         </div>
       </div>
 
-      <!-- Selected before -->
       <div class="space-y-4">
         <p class="font-['Inter'] text-[16px] tracking-[-0.02em] text-[#333]">
           Have you been selected as a volunteer before?
@@ -336,7 +326,7 @@
         <div class="flex gap-2">
           <button
             type="button"
-            class="h-16 flex-1 rounded-[73px] border-[3px] {hasVolunteeredBefore ===
+            class="h-16 flex-1 rounded-[73px] border-[3px] cursor-pointer outline-none {hasVolunteeredBefore ===
             true
               ? 'border-[#fba24d] bg-[#ffeedd]'
               : 'border-[#f2f2f2] border-b-[5px] bg-white'} px-[44px] font-['Nunito'] font-black text-[18px] text-[#333] hover:opacity-80 transition"
@@ -346,7 +336,7 @@
           </button>
           <button
             type="button"
-            class="h-16 flex-1 rounded-[73px] border-[3px] {hasVolunteeredBefore ===
+            class="h-16 flex-1 rounded-[73px] border-[3px] cursor-pointer outline-none {hasVolunteeredBefore ===
             false
               ? 'border-[#fba24d] bg-[#ffeedd]'
               : 'border-[#f2f2f2] border-b-[5px] bg-white'} px-[44px] font-['Nunito'] font-black text-[18px] text-[#333] hover:opacity-80 transition"
@@ -357,7 +347,6 @@
         </div>
       </div>
 
-      <!-- Name -->
       <div class="space-y-4">
         <p class="font-['Inter'] text-[16px] tracking-[-0.02em] text-[#333]">
           What is your name?
@@ -376,11 +365,10 @@
         </div>
       </div>
 
-      <!-- Submit -->
       <div class="space-y-3 text-center">
         <button
           type="button"
-          class="w-full h-16 rounded-[73px] border-[3px] border-[#4dfb59] bg-[#e2ffdd] px-[44px] flex items-center justify-center gap-2 text-[#333] font-['Nunito'] font-black text-[18px] hover:bg-[#d4f5cc] transition disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full h-16 rounded-[73px] border-[3px] border-[#4dfb59] bg-[#e2ffdd] px-[44px] flex items-center justify-center gap-2 text-[#333] font-['Nunito'] font-black text-[18px] hover:bg-[#d4f5cc] transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer outline-none"
           onclick={onSubmit}
           disabled={!fullName.trim() ||
             hasVolunteeredBefore === null ||
