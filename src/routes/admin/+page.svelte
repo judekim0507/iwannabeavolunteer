@@ -722,3 +722,14 @@
     {/if}
   {/if}
 </div>
+
+<style>
+  :global(body) {
+    user-select: auto;
+    -webkit-user-select: auto;
+    -moz-user-select: auto;
+    -ms-user-select: auto;
+    overflow: auto;
+    touch-action: auto;
+  }
+</style>

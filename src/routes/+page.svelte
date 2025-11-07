@@ -393,7 +393,7 @@
 </main>
 
 <style>
-  body {
+  :global(body) {
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
