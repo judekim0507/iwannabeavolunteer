@@ -1,38 +1,36 @@
-# sv
+# I Wanna Be A Volunteer
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A minimal volunteer registration platform for Grade 9 Council events at Burnaby North Secondary School.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **try it urself**
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Tech Stack
 
-# create a new project in my-app
-npx sv create my-app
-```
+- [SvelteKit](https://kit.svelte.dev/) — hell yeah better than react yall
+- [Supabase](https://supabase.com/) — when ur too lazy to setup postgres on aws rds or neon
+- [Tailwind CSS](https://tailwindcss.com/) — we know its better than vanila css
+- [TypeScript](https://www.typescriptlang.org/) — no explanation needed.
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Getting Started
 
 ```sh
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+## Environment
 
-To create a production version of your app:
+Add `.env` with Supabase credentials:
+
+```
+PUBLIC_SUPABASE_URL=your_url
+PUBLIC_SUPABASE_ANON_KEY=your_key
+```
+
+## Build
 
 ```sh
 npm run build
 ```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
