@@ -1,9 +1,2 @@
-import type { PageServerLoad } from "./$types";
-
-const ADMIN_PASSWORD = "wesleyjacobcheung";
-
-export const load: PageServerLoad = async () => {
-  return {
-    adminPassword: ADMIN_PASSWORD,
-  };
-};
+// This file can be used for page load data if needed in the future
+// The login endpoint is now at /admin/login/+server.ts

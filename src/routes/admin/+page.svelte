@@ -46,19 +46,35 @@
     }
   });
 
-  function handleLogin() {
-    if (passwordInput === data.adminPassword) {
-      isAuthenticated = true;
-      sessionStorage.setItem("admin_authenticated", "true");
-      authError = "";
-      loading = true;
-      loadEvents()
-        .then(() => loadVolunteers())
-        .then(() => {
-          loading = false;
-        });
-    } else {
-      authError = "Incorrect password";
+  async function handleLogin() {
+    try {
+      const response = await fetch("/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          password: passwordInput,
+        }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        isAuthenticated = true;
+        sessionStorage.setItem("admin_authenticated", "true");
+        authError = "";
+        loading = true;
+        loadEvents()
+          .then(() => loadVolunteers())
+          .then(() => {
+            loading = false;
+          });
+      } else {
+        authError = data.error || "Incorrect password";
+        passwordInput = "";
+      }
+    } catch (err) {
+      authError = "Failed to connect to server";
       passwordInput = "";
     }
   }
