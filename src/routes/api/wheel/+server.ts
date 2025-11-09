@@ -4,7 +4,10 @@ import { PUBLIC_WHEEL_OF_NAMES_KEY } from "$env/static/public";
 export const POST: RequestHandler = async ({ request }) => {
   try {
     if (!PUBLIC_WHEEL_OF_NAMES_KEY) {
-      return json({ error: "Missing PUBLIC_WHEEL_OF_NAMES_KEY" }, { status: 500 });
+      return json(
+        { error: "Missing PUBLIC_WHEEL_OF_NAMES_KEY" },
+        { status: 500 },
+      );
     }
 
     const body = await request.json().catch(() => ({}));
@@ -33,7 +36,11 @@ export const POST: RequestHandler = async ({ request }) => {
       if (typeof e === "string") return { text: e, enabled: true, weight: 1 };
       if (e && typeof e === "object") {
         const label = e.label ?? e.text ?? String(e);
-        return { text: String(label), enabled: e.enabled ?? true, weight: e.weight ?? 1 };
+        return {
+          text: String(label),
+          enabled: e.enabled ?? true,
+          weight: e.weight ?? 1,
+        };
       }
       return { text: String(e), enabled: true, weight: 1 };
     });
@@ -73,7 +80,7 @@ export const POST: RequestHandler = async ({ request }) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
+        Accept: "application/json",
         "x-api-key": PUBLIC_WHEEL_OF_NAMES_KEY,
       },
       body: JSON.stringify(payload),
@@ -94,18 +101,18 @@ export const POST: RequestHandler = async ({ request }) => {
           details: data,
           status: resp.status,
         },
-        { status: resp.status || 500 }
+        { status: resp.status || 500 },
       );
     }
 
     // Extract path from nested response structure
     const root = data?.data ?? data;
     const path = root?.parsed?.path || root?.path;
-    
+
     if (!path) {
       return json(
         { error: "No path in response", details: data },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -113,8 +120,9 @@ export const POST: RequestHandler = async ({ request }) => {
 
     return json({ id: path, url });
   } catch (err: any) {
-    return json({ error: err?.message || "Internal server error" }, { status: 500 });
+    return json(
+      { error: err?.message || "Internal server error" },
+      { status: 500 },
+    );
   }
 };
-
-
