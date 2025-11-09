@@ -1,10 +1,17 @@
 # I Wanna Be A Volunteer
 
-A minimal volunteer registration platform for Grade 9 Council events at Burnaby North Secondary School.
+A multi-council volunteer registration platform for school councils at Burnaby North Secondary School.
 
 ## Features
 
-- **try it urself**
+- **Multi-Council Support** - Multiple councils can use the same platform
+- **Council-Specific Events** - Each council manages their own volunteer opportunities
+- **Participant Council Selection** - Students pick their council and see relevant events
+- **Supabase Auth** - Secure email/password authentication for council admins
+- **Superuser Management** - Create councils and manage admin accounts
+- **Real-time Countdown** - Events have countdown timers and progress bars
+- **Duplicate Detection** - Prevents duplicate volunteer submissions
+- **Modern Minimalist UI** - Clean design with smooth interactions
 
 ## Tech Stack
 
@@ -25,9 +32,23 @@ npm run dev
 Add `.env` with Supabase credentials:
 
 ```
-PUBLIC_SUPABASE_URL=your_url
-PUBLIC_SUPABASE_ANON_KEY=your_key
+PUBLIC_SUPABASE_URL=your_supabase_project_url
+PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
+
+Find these in: Supabase Dashboard → Settings → API
+
+⚠️ **Keep your service role key secret!** Never commit it to git.
+
+## Setup
+
+See `SETUP_GUIDE.md` for detailed instructions on:
+
+- Running database migrations
+- Setting up Supabase Auth
+- Creating your superuser account
+- Managing councils and admins
 
 ## Build
 

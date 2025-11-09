@@ -3,6 +3,20 @@ import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/publi
 
 export const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
 
+export type Council = {
+  id: string;
+  name: string;
+  created_at: string;
+};
+
+export type CouncilAdmin = {
+  id: string;
+  user_id: string;
+  council_id: string | null;
+  role: 'admin' | 'superuser';
+  created_at: string;
+};
+
 export type Event = {
   id: string;
   name: string;
@@ -10,6 +24,7 @@ export type Event = {
   is_active: boolean;
   ends_at: string;
   created_at: string;
+  council_id: string;
 };
 
 export type Volunteer = {

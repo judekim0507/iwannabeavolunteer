@@ -25,6 +25,6 @@
   <meta name="theme-color" content="#FEFEFE" />
 </svelte:head>
 
-<main class="mx-auto max-w-md px-6 py-10">
+<main class="min-h-screen w-full px-6 py-10">
   {@render children()}
 </main>
