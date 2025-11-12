@@ -9,6 +9,7 @@
     import { onMount } from "svelte";
     import type { User } from "@supabase/supabase-js";
     import { PUBLIC_WHEEL_OF_NAMES_KEY } from "$env/static/public";
+    import { APP_VERSION } from "$lib/appVersion";
 
     let user = $state<User | null>(null);
     let adminRole = $state<CouncilAdmin | null>(null);
@@ -119,29 +120,30 @@
         error = "";
         successMessage = "";
 
-        await loadUserRole();
+        try {
+            await loadUserRole();
 
-        if (!user || !adminRole) {
+            if (!user || !adminRole) {
+                return;
+            }
+
+            await loadCouncils();
+            await Promise.all([loadEvents(), loadVolunteers()]);
+
+            if (isSuperuser()) {
+                await loadAllAdmins();
+                if (!newEventCouncilId && councils.length > 0) {
+                    newEventCouncilId = councils[0].id;
+                }
+            } else if (userCouncil) {
+                newEventCouncilId = userCouncil.id;
+            }
+
+            hasInitialized = true;
+        } finally {
             loading = false;
             isInitializing = false;
-            return;
         }
-
-        await loadCouncils();
-        await Promise.all([loadEvents(), loadVolunteers()]);
-
-        if (isSuperuser()) {
-            await loadAllAdmins();
-            if (!newEventCouncilId && councils.length > 0) {
-                newEventCouncilId = councils[0].id;
-            }
-        } else if (userCouncil) {
-            newEventCouncilId = userCouncil.id;
-        }
-
-        loading = false;
-        hasInitialized = true;
-        isInitializing = false;
     }
 
     async function loadUserRole() {
@@ -297,6 +299,9 @@
         events = [];
         volunteers = [];
         allAdmins = [];
+        hasInitialized = false;
+        isInitializing = false;
+        loading = false;
     }
 
     async function createEvent() {
@@ -1720,6 +1725,9 @@
             {/if}
         </div>
     {/if}
+    <p class="mt-6 text-center text-xs font-['Inter'] text-[#9a9a9a]">
+        Admin v{APP_VERSION}
+    </p>
 </div>
 
 <style>

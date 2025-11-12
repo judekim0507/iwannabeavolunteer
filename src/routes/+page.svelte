@@ -1,5 +1,6 @@
 <script lang="ts">
     import { supabase, type Event, type Council } from "$lib/supabase";
+    import { APP_VERSION } from "$lib/appVersion";
     import { onMount } from "svelte";
 
     let fullName = $state("");
@@ -15,14 +16,19 @@
     let isDuplicate = $state(false);
     let isExpired = $state(false);
     let currentTime = $state(new Date());
+    type SubmissionEntry = { name: string; at: number };
+    const SUBMISSION_STORAGE_KEY = "volunteer_submissions";
+    const SELECTED_COUNCIL_KEY = "selected_council_id";
+    let submissionHistory = $state<Record<string, SubmissionEntry>>({});
 
     onMount(() => {
         // Load selected council from localStorage
         if (typeof window !== "undefined") {
-            const saved = localStorage.getItem("selected_council_id");
+            const saved = localStorage.getItem(SELECTED_COUNCIL_KEY);
             if (saved) {
                 selectedCouncilId = saved;
             }
+            loadSubmissionHistory();
         }
 
         let cancelled = false;
@@ -70,6 +76,84 @@
         };
     });
 
+    function cleanFullName(value: string) {
+        return value.trim().replace(/\s+/g, " ");
+    }
+
+    function normalizeName(value: string) {
+        return cleanFullName(value).toLowerCase();
+    }
+
+    function loadSubmissionHistory() {
+        const stored =
+            typeof window !== "undefined"
+                ? window.localStorage.getItem(SUBMISSION_STORAGE_KEY)
+                : null;
+        if (!stored) return;
+        try {
+            const parsed = JSON.parse(stored);
+            if (parsed && typeof parsed === "object") {
+                submissionHistory = parsed;
+            }
+        } catch (err) {
+            console.warn("Failed to load submission history", err);
+        }
+    }
+
+    function persistSubmissionHistory(next: Record<string, SubmissionEntry>) {
+        submissionHistory = next;
+        if (typeof window !== "undefined") {
+            window.localStorage.setItem(
+                SUBMISSION_STORAGE_KEY,
+                JSON.stringify(next),
+            );
+        }
+    }
+
+    function markSubmission(eventId: string, value: string) {
+        if (!eventId) return;
+        persistSubmissionHistory({
+            ...submissionHistory,
+            [eventId]: { name: normalizeName(value), at: Date.now() },
+        });
+    }
+
+    function hasSubmittedForEvent(eventId?: string | null) {
+        return Boolean(eventId && submissionHistory[eventId]);
+    }
+
+    function syncSubmittedState(eventId?: string | null) {
+        if (hasSubmittedForEvent(eventId)) {
+            submitted = true;
+            isDuplicate = false;
+        } else {
+            submitted = false;
+        }
+    }
+
+    function extractGradeNumber(name: string) {
+        const match = name.match(/grade\s+(\d+)/i);
+        return match ? Number(match[1]) : null;
+    }
+
+    function sortCouncils(list: Council[]) {
+        return [...list].sort((a, b) => {
+            const gradeA = extractGradeNumber(a.name);
+            const gradeB = extractGradeNumber(b.name);
+
+            if (gradeA !== null || gradeB !== null) {
+                if (gradeA === null) return 1;
+                if (gradeB === null) return -1;
+                if (gradeA !== gradeB) return gradeA - gradeB;
+            }
+
+            return a.name.localeCompare(b.name, undefined, {
+                numeric: true,
+                sensitivity: "base",
+            });
+        });
+    }
+
     async function loadCouncils() {
         const { data, error: err } = await supabase
             .from("councils")
@@ -79,13 +163,13 @@
         if (err) {
             error = err.message;
         } else {
-            councils = data || [];
+            councils = data ? sortCouncils(data) : [];
             // Auto-select first council if none selected
             if (!selectedCouncilId && councils.length > 0) {
                 selectedCouncilId = councils[0].id;
                 if (typeof window !== "undefined") {
                     localStorage.setItem(
-                        "selected_council_id",
+                        SELECTED_COUNCIL_KEY,
                         selectedCouncilId,
                     );
                 }
@@ -103,9 +187,9 @@
 
         if (typeof window !== "undefined") {
             if (nextId) {
-                localStorage.setItem("selected_council_id", nextId);
+                localStorage.setItem(SELECTED_COUNCIL_KEY, nextId);
             } else {
-                localStorage.removeItem("selected_council_id");
+                localStorage.removeItem(SELECTED_COUNCIL_KEY);
             }
         }
 
@@ -115,7 +199,7 @@
             if (previousId) {
                 fullName = "";
                 hasVolunteeredBefore = null;
-                submitted = false;
+                syncSubmittedState(null);
                 isDuplicate = false;
                 error = "";
             }
@@ -131,10 +215,10 @@
         } finally {
             if (ticket === eventLoadTicket) {
                 isEventLoading = false;
+                syncSubmittedState(activeEvent?.id);
                 if (previousId !== nextId) {
                     fullName = "";
                     hasVolunteeredBefore = null;
-                    submitted = false;
                     isDuplicate = false;
                 }
             }
@@ -154,35 +238,40 @@
             .eq("council_id", selectedCouncilId)
             .single();
 
-        if (err && err.code !== "PGRST116") {
-            error = err.message;
-        } else {
-            activeEvent = data;
+        if (err) {
+            if (err.code !== "PGRST116") {
+                error = err.message;
+            }
+            activeEvent = null;
             isExpired = false;
+            return;
+        }
 
-            // Check if already expired on load
-            if (data?.ends_at) {
-                const end = new Date(data.ends_at);
-                if (new Date().getTime() >= end.getTime()) {
-                    isExpired = true;
-                }
+        activeEvent = data ?? null;
+        isExpired = false;
+
+        if (data?.ends_at) {
+            const end = new Date(data.ends_at);
+            if (new Date().getTime() >= end.getTime()) {
+                isExpired = true;
             }
         }
     }
 
     async function onSubmit() {
-        if (!activeEvent || !fullName.trim() || hasVolunteeredBefore === null)
+        const cleanedName = cleanFullName(fullName);
+        if (!activeEvent || !cleanedName || hasVolunteeredBefore === null)
             return;
 
+        fullName = cleanedName;
         submitting = true;
         error = "";
 
-        // Check for duplicate name
         const { data: existingVolunteers, error: checkErr } = await supabase
             .from("volunteers")
             .select("full_name")
             .eq("event_id", activeEvent.id)
-            .ilike("full_name", fullName.trim());
+            .ilike("full_name", cleanedName);
 
         if (checkErr) {
             error = checkErr.message;
@@ -198,7 +287,7 @@
 
         const { error: err } = await supabase.from("volunteers").insert({
             event_id: activeEvent.id,
-            full_name: fullName.trim(),
+            full_name: cleanedName,
             has_volunteered_before: hasVolunteeredBefore,
         });
 
@@ -206,11 +295,14 @@
 
         if (err) {
             error = err.message;
-        } else {
-            submitted = true;
-            fullName = "";
-            hasVolunteeredBefore = null;
+            return;
         }
+
+        markSubmission(activeEvent.id, cleanedName);
+        submitted = true;
+        isDuplicate = false;
+        fullName = "";
+        hasVolunteeredBefore = null;
     }
 
     function calculateTimeRemaining() {
@@ -341,7 +433,7 @@
 
                     <button
                         type="button"
-                        class="font-['Nunito'] font-black text-[32px] leading-none tracking-[-0.02em] text-[#020202] cursor-pointer bg-transparent border-0 p-0 text-left"
+                        class="font-['Nunito'] font-black text-[32px] leading-none tracking-[-0.02em] text-[#020202] bg-transparent border-0 p-0 text-left cursor-default"
                         ontouchstart={(e) => {
                             let timer: NodeJS.Timeout;
                             function clear() {
@@ -375,7 +467,6 @@
                             window.addEventListener("mouseleave", up);
                         }}
                         style="touch-action:manipulation;user-select:none;-webkit-user-select:none;"
-                        title="Long press to enter admin"
                     >
                         I wanna be a volunteer
                     </button>
@@ -456,15 +547,13 @@
                             </h2>
                             <p class="font-['Inter'] text-[16px] text-[#666]">
                                 Your application has been submitted
-                                successfully.
+                                successfully. Only one submission per event is
+                                allowed on this device.
                             </p>
-                            <button
-                                type="button"
-                                class="mx-auto mt-2 inline-flex h-12 items-center justify-center rounded-[73px] border-[3px] border-[#f2f2f2] bg-white px-6 font-['Nunito'] font-bold text-[16px] text-[#333] hover:bg-[#f8f8f8] transition"
-                                onclick={() => (submitted = false)}
-                            >
-                                TYSM JUDE!!
-                            </button>
+                            <p class="font-['Inter'] text-[13px] text-[#999]">
+                                Need to fix something? Contact your council
+                                admin so they can update your entry.
+                            </p>
                         </div>
                     {:else if isDuplicate}
                         <div
@@ -478,7 +567,8 @@
                             </h2>
                             <p class="font-['Inter'] text-[16px] text-[#666]">
                                 This name has already been submitted for this
-                                event.
+                                event. Each event only accepts one entry per
+                                person.
                             </p>
                             <button
                                 type="button"
@@ -680,7 +770,7 @@
                                     >
                                     at BNSS.
                                     <a
-                                        href="https://www.judekim.ca/"
+                                        href="https://www.instagram.com/_judek11/"
                                         class="underline hover:text-[#333]"
                                         >Learn more.</a
                                     >
@@ -700,6 +790,11 @@
                 {/if}
             </section>
         {/if}
+        <p class="mt-10 text-center text-xs font-['Inter'] text-[#9a9a9a]">
+            <a href="https://github.com/judekim0507/iwannabeavolunteer"
+                >App v{APP_VERSION}</a
+            >
+        </p>
     </div>
 </main>
 
