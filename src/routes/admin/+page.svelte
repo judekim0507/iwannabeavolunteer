@@ -58,35 +58,51 @@
     let creatingAdmin = $state(false);
     let deletingAdmin = $state<string | null>(null);
 
-    let hasInitialized = $state(false);
-    let isInitializing = $state(false);
-
     onMount(() => {
         let isMounted = true;
+        let currentSession: string | null = null;
 
+        // Initial auth check
         (async () => {
             const {
-                data: { user: currentUser },
-            } = await supabase.auth.getUser();
+                data: { session },
+            } = await supabase.auth.getSession();
 
-            if (currentUser) {
-                user = currentUser;
+            if (!isMounted) return;
+
+            if (session?.user) {
+                user = session.user;
+                currentSession = session.access_token;
                 await initializeDashboard();
             }
 
-            if (isMounted) {
-                loading = false;
-            }
+            loading = false;
         })();
 
+        // Listen to auth changes
         const { data: authListener } = supabase.auth.onAuthStateChange(
             async (event, session) => {
-                if (event === "SIGNED_IN" && session?.user && isMounted) {
+                if (!isMounted) return;
+
+                // Only react to actual auth changes, not refocus events
+                const newSession = session?.access_token || null;
+
+                if (
+                    event === "SIGNED_IN" &&
+                    session?.user &&
+                    newSession !== currentSession
+                ) {
+                    currentSession = newSession;
                     user = session.user;
+                    adminRole = null;
+                    userCouncil = null;
+                    loading = true;
                     await initializeDashboard();
+                    loading = false;
                 }
 
-                if (event === "SIGNED_OUT" && isMounted) {
+                if (event === "SIGNED_OUT") {
+                    currentSession = null;
                     user = null;
                     adminRole = null;
                     userCouncil = null;
@@ -94,8 +110,6 @@
                     events = [];
                     volunteers = [];
                     allAdmins = [];
-                    hasInitialized = false;
-                    isInitializing = false;
                     loading = false;
                 }
             },
@@ -117,20 +131,17 @@
     }
 
     async function initializeDashboard() {
-        if (isInitializing || !user) return;
-        isInitializing = true;
-        if (!hasInitialized) loading = true;
+        if (!user) return;
+
         error = "";
         successMessage = "";
 
         try {
             await loadUserRole();
 
-            if (!user || !adminRole) {
-                // Don't call handleLogout here to avoid race conditions
-                // Just reset the initialization flags
-                isInitializing = false;
-                loading = false;
+            if (!adminRole) {
+                // User is authenticated but not an admin
+                // Sign out will be handled by loadUserRole
                 return;
             }
 
@@ -145,14 +156,9 @@
             } else if (userCouncil) {
                 newEventCouncilId = userCouncil.id;
             }
-
-            hasInitialized = true;
         } catch (err) {
             console.error("Dashboard initialization error:", err);
             error = "Failed to load dashboard. Please try refreshing.";
-        } finally {
-            loading = false;
-            isInitializing = false;
         }
     }
 
@@ -166,13 +172,14 @@
             .single();
 
         if (err) {
+            adminRole = null;
             if (err.code === "PGRST116") {
                 error = `Access denied: your account (${user.email}) is not registered as an admin.`;
+                // Delay logout slightly to show error message
+                setTimeout(() => supabase.auth.signOut(), 2000);
             } else {
                 error = `Database error: ${err.message}`;
             }
-            // Sign out without triggering race conditions
-            supabase.auth.signOut();
             return;
         }
 
@@ -276,6 +283,7 @@
     async function handleLogin(event?: SubmitEvent) {
         event?.preventDefault();
         authError = "";
+        loading = true;
 
         const { error: err } = await supabase.auth.signInWithPassword({
             email: email.trim(),
@@ -284,35 +292,18 @@
 
         if (err) {
             authError = err.message;
+            loading = false;
             return;
         }
 
-        const {
-            data: { user: signedInUser },
-        } = await supabase.auth.getUser();
-
-        if (signedInUser) {
-            user = signedInUser;
-            await initializeDashboard();
-            loading = false;
-        }
-
+        // Auth state change will handle the rest
         email = "";
         password = "";
     }
 
     async function handleLogout() {
         await supabase.auth.signOut();
-        user = null;
-        adminRole = null;
-        userCouncil = null;
-        councils = [];
-        events = [];
-        volunteers = [];
-        allAdmins = [];
-        hasInitialized = false;
-        isInitializing = false;
-        loading = false;
+        // Auth state change will handle cleaning up state
     }
 
     async function createEvent() {
