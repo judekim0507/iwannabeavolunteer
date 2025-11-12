@@ -21,12 +21,13 @@ export default defineConfig({
         description:
           "A multi-council volunteer registration platform for Burnaby North Secondary School events.",
         start_url: "/",
-        scope: "/",
         display: "standalone",
-        display_override: ["standalone", "window-controls-overlay"],
-        orientation: "portrait",
         background_color: "#F8FAFC",
         theme_color: "#F8FAFC",
+        lang: "en",
+        scope: "/",
+        display_override: ["standalone", "window-controls-overlay"],
+        orientation: "portrait",
         icons: [
           {
             src: "/pwa-icon-192.png",
