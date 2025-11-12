@@ -81,12 +81,12 @@
 
         const { data: authListener } = supabase.auth.onAuthStateChange(
             async (event, session) => {
-                if (event === "SIGNED_IN" && session?.user) {
+                if (event === "SIGNED_IN" && session?.user && isMounted) {
                     user = session.user;
                     await initializeDashboard();
                 }
 
-                if (event === "SIGNED_OUT") {
+                if (event === "SIGNED_OUT" && isMounted) {
                     user = null;
                     adminRole = null;
                     userCouncil = null;
@@ -94,6 +94,9 @@
                     events = [];
                     volunteers = [];
                     allAdmins = [];
+                    hasInitialized = false;
+                    isInitializing = false;
+                    loading = false;
                 }
             },
         );
@@ -114,7 +117,7 @@
     }
 
     async function initializeDashboard() {
-        if (isInitializing) return;
+        if (isInitializing || !user) return;
         isInitializing = true;
         if (!hasInitialized) loading = true;
         error = "";
@@ -124,6 +127,10 @@
             await loadUserRole();
 
             if (!user || !adminRole) {
+                // Don't call handleLogout here to avoid race conditions
+                // Just reset the initialization flags
+                isInitializing = false;
+                loading = false;
                 return;
             }
 
@@ -140,6 +147,9 @@
             }
 
             hasInitialized = true;
+        } catch (err) {
+            console.error("Dashboard initialization error:", err);
+            error = "Failed to load dashboard. Please try refreshing.";
         } finally {
             loading = false;
             isInitializing = false;
@@ -161,7 +171,8 @@
             } else {
                 error = `Database error: ${err.message}`;
             }
-            await handleLogout();
+            // Sign out without triggering race conditions
+            supabase.auth.signOut();
             return;
         }
 
