@@ -26,6 +26,7 @@ export default defineConfig({
         theme_color: "#F8FAFC",
         lang: "en",
         scope: "/",
+        categories: ["education", "lifestyle", "utilities"],
         display_override: ["standalone", "window-controls-overlay"],
         orientation: "portrait",
         icons: [
