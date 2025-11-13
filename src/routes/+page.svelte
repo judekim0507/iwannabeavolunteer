@@ -334,6 +334,38 @@
     }
 </script>
 
+<svelte:head>
+    {@html `<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "I wanna be a volunteer",
+        "url": "https://iwannabeavolunteer.ca/",
+        "description": "A multi-council volunteer registration platform for Burnaby North Secondary School events.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "CAD"
+        },
+        "creator": {
+            "@type": "Person",
+            "name": "Jude Kim",
+            "url": "https://www.judekim.ca/"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "Burnaby North Secondary School"
+        },
+        "audience": {
+            "@type": "EducationalAudience",
+            "educationalRole": "student"
+        }
+    }
+    <\/script>`}
+</svelte:head>
+
 <main class="w-full h-full px-6 py-10">
     <div class="mx-auto max-w-sm">
         {#if loading}

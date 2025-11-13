@@ -686,7 +686,13 @@
 </script>
 
 <svelte:head>
-    <title>Admin · I wanna be a volunteer</title>
+    <title>Admin Dashboard | I wanna be a volunteer</title>
+    <meta
+        name="description"
+        content="Admin dashboard for managing volunteer events and registrations at Burnaby North Secondary School."
+    />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="https://iwannabeavolunteer.ca/admin" />
 </svelte:head>
 
 <div class="w-full h-full space-y-10">

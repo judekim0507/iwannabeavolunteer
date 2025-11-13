@@ -1,3 +1,10 @@
-# allow crawling everything by default
+# Allow crawling everything by default
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://iwannabeavolunteer.ca/sitemap.xml
+
+# Crawl delay for polite bots
+Crawl-delay: 1
