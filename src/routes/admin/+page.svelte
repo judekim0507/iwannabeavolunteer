@@ -28,6 +28,7 @@
     let email = $state("");
     let password = $state("");
     let authError = $state("");
+    let signingIn = $state(false);
 
     // Event creation
     let newEventName = $state("");
@@ -64,19 +65,23 @@
 
         // Initial auth check
         (async () => {
-            const {
-                data: { session },
-            } = await supabase.auth.getSession();
+            try {
+                const {
+                    data: { session },
+                } = await supabase.auth.getSession();
 
-            if (!isMounted) return;
+                if (!isMounted) return;
 
-            if (session?.user) {
-                user = session.user;
-                currentSession = session.access_token;
-                await initializeDashboard();
+                if (session?.user) {
+                    user = session.user;
+                    currentSession = session.access_token;
+                    await initializeDashboard();
+                }
+            } finally {
+                if (isMounted) {
+                    loading = false;
+                }
             }
-
-            loading = false;
         })();
 
         // Listen to auth changes
@@ -87,18 +92,31 @@
                 // Only react to actual auth changes, not refocus events
                 const newSession = session?.access_token || null;
 
-                if (
-                    event === "SIGNED_IN" &&
-                    session?.user &&
-                    newSession !== currentSession
-                ) {
-                    currentSession = newSession;
-                    user = session.user;
-                    adminRole = null;
-                    userCouncil = null;
-                    loading = true;
-                    await initializeDashboard();
-                    loading = false;
+                if (event === "SIGNED_IN" && session?.user) {
+                    // Check if this is a token refresh (user already logged in) vs actual sign-in
+                    const isTokenRefresh = user?.id === session.user.id;
+
+                    if (isTokenRefresh) {
+                        // Just update the session token, don't re-initialize
+                        currentSession = newSession;
+                    } else {
+                        // Actual sign-in - full initialization needed
+                        currentSession = newSession;
+                        user = session.user;
+                        adminRole = null;
+                        userCouncil = null;
+                        loading = true;
+                        try {
+                            await initializeDashboard();
+                        } finally {
+                            loading = false;
+                        }
+                    }
+                }
+
+                if (event === "TOKEN_REFRESHED" && session) {
+                    // Just update the session token silently
+                    currentSession = session.access_token;
                 }
 
                 if (event === "SIGNED_OUT") {
@@ -283,22 +301,25 @@
     async function handleLogin(event?: SubmitEvent) {
         event?.preventDefault();
         authError = "";
-        loading = true;
+        signingIn = true;
 
-        const { error: err } = await supabase.auth.signInWithPassword({
-            email: email.trim(),
-            password,
-        });
+        try {
+            const { error: err } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password,
+            });
 
-        if (err) {
-            authError = err.message;
-            loading = false;
-            return;
+            if (err) {
+                authError = err.message;
+                return;
+            }
+
+            // Auth state change will handle loading state and initialization
+            email = "";
+            password = "";
+        } finally {
+            signingIn = false;
         }
-
-        // Auth state change will handle the rest
-        email = "";
-        password = "";
     }
 
     async function handleLogout() {
@@ -753,7 +774,8 @@
                         id="email"
                         type="email"
                         required
-                        class="h-14 w-full rounded-[73px] border-[3px] border-[#f2f2f2] bg-white px-6 font-['Nunito'] text-[16px] text-[#333] outline-none transition focus:border-[#8b3ffc]"
+                        disabled={signingIn}
+                        class="h-14 w-full rounded-[73px] border-[3px] border-[#f2f2f2] bg-white px-6 font-['Nunito'] text-[16px] text-[#333] outline-none transition focus:border-[#8b3ffc] disabled:opacity-60"
                         bind:value={email}
                     />
                 </div>
@@ -768,17 +790,18 @@
                         id="password"
                         type="password"
                         required
-                        class="h-14 w-full rounded-[73px] border-[3px] border-[#f2f2f2] bg-white px-6 font-['Nunito'] text-[16px] text-[#333] outline-none transition focus:border-[#8b3ffc]"
+                        disabled={signingIn}
+                        class="h-14 w-full rounded-[73px] border-[3px] border-[#f2f2f2] bg-white px-6 font-['Nunito'] text-[16px] text-[#333] outline-none transition focus:border-[#8b3ffc] disabled:opacity-60"
                         bind:value={password}
                     />
                 </div>
 
                 <button
                     type="submit"
-                    class="w-full h-14 rounded-[73px] border-[3px] border-[#4dfb59] bg-[#e2ffdd] font-['Nunito'] font-black text-[17px] text-[#333] transition hover:bg-[#d4f5cc] active:scale-95"
-                    disabled={!email.trim() || !password.trim()}
+                    class="w-full h-14 rounded-[73px] border-[3px] border-[#4dfb59] bg-[#e2ffdd] font-['Nunito'] font-black text-[17px] text-[#333] transition hover:bg-[#d4f5cc] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                    disabled={!email.trim() || !password.trim() || signingIn}
                 >
-                    Sign In
+                    {signingIn ? "Signing in..." : "Sign In"}
                 </button>
             </form>
 
