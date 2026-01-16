@@ -5,11 +5,15 @@
 
     let fullName = $state("");
     let hasVolunteeredBefore = $state<boolean | null>(null);
-    let activeEvent = $state<Event | null>(null);
+    let activeEvents = $state<Event[]>([]);
+    let selectedEventId = $state<string>("");
     let councils = $state<Council[]>([]);
     let selectedCouncilId = $state("");
     let loading = $state(true);
     let isEventLoading = $state(false);
+
+    // Derived active event from selection
+    const activeEvent = $derived(activeEvents.find(e => e.id === selectedEventId) ?? activeEvents[0] ?? null);
     let submitting = $state(false);
     let submitted = $state(false);
     let error = $state("");
@@ -194,7 +198,8 @@
         }
 
         if (!nextId) {
-            activeEvent = null;
+            activeEvents = [];
+            selectedEventId = "";
             isExpired = false;
             if (previousId) {
                 fullName = "";
@@ -227,7 +232,8 @@
 
     async function loadActiveEvent() {
         if (!selectedCouncilId) {
-            activeEvent = null;
+            activeEvents = [];
+            selectedEventId = "";
             return;
         }
 
@@ -236,22 +242,34 @@
             .select("*")
             .eq("is_active", true)
             .eq("council_id", selectedCouncilId)
-            .single();
+            .order("created_at", { ascending: false });
 
         if (err) {
-            if (err.code !== "PGRST116") {
-                error = err.message;
-            }
-            activeEvent = null;
+            error = err.message;
+            activeEvents = [];
+            selectedEventId = "";
             isExpired = false;
             return;
         }
 
-        activeEvent = data ?? null;
+        activeEvents = data ?? [];
+
+        // Auto-select first event if available
+        if (activeEvents.length > 0 && !selectedEventId) {
+            selectedEventId = activeEvents[0].id;
+        } else if (activeEvents.length === 0) {
+            selectedEventId = "";
+        } else if (!activeEvents.find(e => e.id === selectedEventId)) {
+            // Current selection no longer valid, reset to first
+            selectedEventId = activeEvents[0]?.id ?? "";
+        }
+
         isExpired = false;
 
-        if (data?.ends_at) {
-            const end = new Date(data.ends_at);
+        // Check if selected event is expired
+        const selected = activeEvents.find(e => e.id === selectedEventId);
+        if (selected?.ends_at) {
+            const end = new Date(selected.ends_at);
             if (new Date().getTime() >= end.getTime()) {
                 isExpired = true;
             }
@@ -313,8 +331,15 @@
 
         if (diff <= 0) return "Ended";
 
-        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const totalHours = Math.floor(diff / (1000 * 60 * 60));
+        const days = Math.floor(totalHours / 24);
+        const hours = totalHours % 24;
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+        // Show "X days Y hours" format when > 24 hours
+        if (days > 0) {
+            return `${days} day${days !== 1 ? 's' : ''} ${hours} hour${hours !== 1 ? 's' : ''}`;
+        }
 
         return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
     }
@@ -656,29 +681,81 @@
                             </p>
                         </div>
                     {:else}
+                        <!-- Event Selection -->
                         <div class="space-y-4">
                             <p
                                 class="font-['Inter'] text-[16px] tracking-[-0.02em] text-[#333]"
                             >
-                                You are applying for...
+                                {activeEvents.length > 1 ? 'Which event are you applying for?' : 'You are applying for...'}
                             </p>
-                            <div class="flex justify-center">
-                                <div
-                                    class="w-full h-16 rounded-[73px] border-[3px] border-[#fba24d] bg-[#ffeedd] px-[44px] flex items-center justify-center gap-2 text-[#333] cursor-pointer"
-                                >
-                                    {#if activeEvent.emoji}
-                                        <span class="text-[22px]"
-                                            >{activeEvent.emoji}</span
-                                        >
-                                    {:else}
-                                        <span class="text-[22px]"></span>
-                                    {/if}
-                                    <span
-                                        class="font-['Nunito'] font-black text-[18px] tracking-[-0.02em]"
-                                        >{activeEvent.name}</span
+                            {#if activeEvents.length > 1}
+                                <!-- Dropdown for multiple events -->
+                                <div class="relative">
+                                    <label for="event-select" class="sr-only"
+                                        >Choose event</label
                                     >
+                                    <select
+                                        id="event-select"
+                                        class="h-16 w-full appearance-none rounded-[73px] border-[3px] border-[#fba24d] border-b-[5px] bg-[#ffeedd] px-6 font-['Nunito'] font-bold text-[18px] tracking-[-0.02em] text-[#333] outline-none transition focus:border-[#fba24d] disabled:opacity-60"
+                                        bind:value={selectedEventId}
+                                        onchange={(event) => {
+                                            const value = (event.currentTarget as HTMLSelectElement).value;
+                                            selectedEventId = value;
+                                            syncSubmittedState(value);
+                                            fullName = "";
+                                            hasVolunteeredBefore = null;
+                                            isDuplicate = false;
+                                            // Check expiry for new selection
+                                            const selected = activeEvents.find(e => e.id === value);
+                                            if (selected?.ends_at) {
+                                                const end = new Date(selected.ends_at);
+                                                isExpired = new Date().getTime() >= end.getTime();
+                                            } else {
+                                                isExpired = false;
+                                            }
+                                        }}
+                                    >
+                                        {#each activeEvents as event (event.id)}
+                                            <option value={event.id}>{event.emoji ? `${event.emoji} ` : ''}{event.name}</option>
+                                        {/each}
+                                    </select>
+                                    <svg
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 20 20"
+                                        fill="none"
+                                        class="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-[#fba24d]"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M5 7l5 6 5-6"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
                                 </div>
-                            </div>
+                            {:else}
+                                <!-- Static display for single event -->
+                                <div class="flex justify-center">
+                                    <div
+                                        class="w-full h-16 rounded-[73px] border-[3px] border-[#fba24d] bg-[#ffeedd] px-[44px] flex items-center justify-center gap-2 text-[#333]"
+                                    >
+                                        {#if activeEvent?.emoji}
+                                            <span class="text-[22px]"
+                                                >{activeEvent.emoji}</span
+                                            >
+                                        {:else}
+                                            <span class="text-[22px]"></span>
+                                        {/if}
+                                        <span
+                                            class="font-['Nunito'] font-black text-[18px] tracking-[-0.02em]"
+                                            >{activeEvent?.name}</span
+                                        >
+                                    </div>
+                                </div>
+                            {/if}
                         </div>
 
                         <div class="space-y-4">
