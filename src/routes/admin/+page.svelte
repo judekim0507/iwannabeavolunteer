@@ -68,17 +68,6 @@
 				</div>
 			{/if}
 
-			{#if dashboard.successMessage}
-				<div class="toast toast-success" role="status">
-					<div class="toast-content">
-						<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-							<circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
-							<path d="M5.5 8.5L7 10l3.5-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-						<p>{dashboard.successMessage}</p>
-					</div>
-				</div>
-			{/if}
 
 			{#if dashboard.isLoading}
 				<DashboardSkeleton />
@@ -217,11 +206,6 @@
 	.toast-error {
 		background: #fef2f2;
 		color: #c53030;
-	}
-
-	.toast-success {
-		background: #f0fdf4;
-		color: #15803d;
 	}
 
 	.toast-dismiss {

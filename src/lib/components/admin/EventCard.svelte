@@ -150,24 +150,19 @@
 			<div class="event-left">
 				<button
 					onclick={handleToggleActive}
-					class="toggle-check"
+					class="toggle-switch"
 					class:active={event.is_active}
+					role="switch"
+					aria-checked={event.is_active}
 					aria-label={event.is_active ? 'Deactivate event' : 'Activate event'}
 				>
-					{#if event.is_active}
-						<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-							<path d="M2.5 6.5L5 9l4.5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
-					{/if}
+					<span class="toggle-thumb"></span>
 				</button>
 
 				<div class="event-info">
 					<div class="event-title-row">
 						{#if event.emoji}<span class="event-emoji">{event.emoji}</span>{/if}
 						<span class="event-name">{event.name}</span>
-						{#if event.is_active}
-							<span class="active-dot"></span>
-						{/if}
 					</div>
 					<div class="event-meta">
 						{#if auth.isSuperuser}
@@ -343,34 +338,46 @@
 		}
 	}
 
-	.toggle-check {
+	.toggle-switch {
 		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 22px;
-		height: 22px;
-		border: 1.8px solid #d5d5d2;
-		border-radius: 6px;
-		background: transparent;
-		color: white;
+		position: relative;
+		width: 34px;
+		height: 20px;
+		border: none;
+		border-radius: 10px;
+		background: #d5d5d2;
 		cursor: pointer;
-		transition: all 0.2s ease;
+		transition: background 0.25s ease;
 		margin-top: 1px;
+		padding: 0;
 	}
 
-	.toggle-check:hover {
-		border-color: #8a8a87;
+	.toggle-switch:hover {
+		background: #c8c8c5;
 	}
 
-	.toggle-check.active {
+	.toggle-switch.active {
 		background: #141413;
-		border-color: #141413;
 	}
 
-	.toggle-check.active:hover {
+	.toggle-switch.active:hover {
 		background: #2a2a28;
-		border-color: #2a2a28;
+	}
+
+	.toggle-thumb {
+		position: absolute;
+		top: 3px;
+		left: 3px;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: white;
+		transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	}
+
+	.toggle-switch.active .toggle-thumb {
+		transform: translateX(14px);
 	}
 
 	.event-info {
@@ -396,15 +403,6 @@
 		color: #141413;
 		letter-spacing: -0.2px;
 		line-height: 1.3;
-	}
-
-	.active-dot {
-		width: 7px;
-		height: 7px;
-		border-radius: 50%;
-		background: #22c55e;
-		flex-shrink: 0;
-		animation: pulse-dot 2s ease-in-out infinite;
 	}
 
 	.event-meta {
@@ -841,11 +839,6 @@
 	@keyframes toastIn {
 		from { opacity: 0; transform: translateX(4px); }
 		to { opacity: 1; transform: translateX(0); }
-	}
-
-	@keyframes pulse-dot {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.4; }
 	}
 
 	@keyframes rowIn {

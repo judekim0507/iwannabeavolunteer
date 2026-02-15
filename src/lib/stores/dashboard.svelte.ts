@@ -1,5 +1,6 @@
 import { supabase, type Event, type Council, type Volunteer, type CouncilAdmin } from '$lib/supabase';
 import { auth } from './auth.svelte';
+import { toast } from 'svelte-sonner';
 
 class DashboardStore {
 	councils = $state<Council[]>([]);
@@ -10,7 +11,6 @@ class DashboardStore {
 	isLoading = $state(false);
 	hasLoaded = $state(false);
 	error = $state<string | null>(null);
-	successMessage = $state<string | null>(null);
 
 	councilFilter = $state<string | null>(null);
 
@@ -257,17 +257,11 @@ class DashboardStore {
 	}
 
 	flashSuccess(message: string) {
-		this.successMessage = message;
-		setTimeout(() => {
-			if (this.successMessage === message) {
-				this.successMessage = null;
-			}
-		}, 3000);
+		toast.success(message);
 	}
 
 	clearMessages() {
 		this.error = null;
-		this.successMessage = null;
 	}
 
 	reset() {
