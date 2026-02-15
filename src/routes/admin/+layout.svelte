@@ -3,12 +3,17 @@
     let { children } = $props();
 </script>
 
-<main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+<div class="admin-shell">
     {@render children()}
-</main>
+</div>
 
 <style>
     :global(body) {
-        background-color: #f5f5f5;
+        background-color: #f7f7f5;
+    }
+
+    .admin-shell {
+        min-height: 100dvh;
+        min-height: 100vh;
     }
 </style>

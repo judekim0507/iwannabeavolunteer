@@ -8,6 +8,7 @@ class DashboardStore {
 	admins = $state<(CouncilAdmin & { email?: string })[]>([]);
 
 	isLoading = $state(false);
+	hasLoaded = $state(false);
 	error = $state<string | null>(null);
 	successMessage = $state<string | null>(null);
 
@@ -36,6 +37,7 @@ class DashboardStore {
 		if (!auth.isAuthenticated) return;
 
 		this.isLoading = true;
+		this.hasLoaded = false;
 		this.error = null;
 
 		try {
@@ -52,6 +54,7 @@ class DashboardStore {
 			this.error = err instanceof Error ? err.message : 'Failed to load dashboard data';
 		} finally {
 			this.isLoading = false;
+			this.hasLoaded = true;
 		}
 	}
 
@@ -272,6 +275,7 @@ class DashboardStore {
 		this.events = [];
 		this.volunteers = [];
 		this.admins = [];
+		this.hasLoaded = false;
 		this.councilFilter = null;
 		this.clearMessages();
 	}

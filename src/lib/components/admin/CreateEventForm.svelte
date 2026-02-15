@@ -48,71 +48,57 @@
 	}
 </script>
 
-<div class="mt-8 mb-6">
+<div class="create-event-section">
 	{#if !isOpen}
-		<button
-			type="button"
-			onclick={() => (isOpen = true)}
-			class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1a1a1a] px-4 text-[13px] font-medium text-white transition-all duration-200 hover:bg-[#333] active:scale-[0.98]"
-		>
-			<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-				<path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+		<button type="button" onclick={() => (isOpen = true)} class="new-event-btn">
+			<svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+				<path d="M7.5 2.5v10M2.5 7.5h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
 			</svg>
 			New event
 		</button>
 	{:else}
-		<div
-			class="overflow-hidden rounded-xl border border-[#e5e5e5] bg-white transition-all duration-300"
-			style="animation: slideDown 0.2s ease-out"
-		>
-			<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="p-5">
-				<div class="mb-4 flex items-center justify-between">
-					<h3 class="text-[15px] font-semibold text-[#1a1a1a]">Create event</h3>
-					<button
-						type="button"
-						onclick={close}
-						class="rounded-md p-1 text-[#999] transition-colors duration-200 hover:bg-[#f5f5f5] hover:text-[#666]"
-					>
-						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+		<div class="create-form-card">
+			<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+				<div class="form-header">
+					<h3>Create event</h3>
+					<button type="button" onclick={close} class="close-btn" aria-label="Close">
+						<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+							<path d="M4.5 4.5l7 7M11.5 4.5l-7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
 						</svg>
 					</button>
 				</div>
 
-				<div class="space-y-4">
-					<div class="grid gap-4 sm:grid-cols-2">
-						{#if auth.isSuperuser}
-							<div>
-								<label for="create-council" class="mb-2 block text-[12px] font-medium text-[#666]">Council</label>
-								<select
-									id="create-council"
-									bind:value={councilId}
-									disabled={isCreating}
-									class="h-10 w-full rounded-lg border border-[#e5e5e5] bg-white px-3 text-[13px] text-[#1a1a1a] outline-none transition-all duration-200 hover:border-[#ccc] focus:border-[#1a1a1a] focus:ring-4 focus:ring-[#1a1a1a]/5 disabled:bg-[#fafafa]"
-								>
+				<div class="form-fields">
+					{#if auth.isSuperuser}
+						<div class="field">
+							<label for="create-council">Council</label>
+							<div class="select-wrap">
+								<select id="create-council" bind:value={councilId} disabled={isCreating}>
 									{#each dashboard.councils as council (council.id)}
 										<option value={council.id}>{council.name}</option>
 									{/each}
 								</select>
+								<svg class="select-icon" width="12" height="12" viewBox="0 0 12 12" fill="none">
+									<path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+								</svg>
 							</div>
-						{/if}
-
-						<div class:sm:col-span-2={!auth.isSuperuser}>
-							<label for="create-name" class="mb-2 block text-[12px] font-medium text-[#666]">Event name</label>
-							<input
-								id="create-name"
-								type="text"
-								placeholder="e.g. Bubble Tea Fundraiser"
-								bind:value={name}
-								disabled={isCreating}
-								class="h-10 w-full rounded-lg border border-[#e5e5e5] bg-white px-3 text-[13px] text-[#1a1a1a] outline-none transition-all duration-200 placeholder:text-[#999] hover:border-[#ccc] focus:border-[#1a1a1a] focus:ring-4 focus:ring-[#1a1a1a]/5 disabled:bg-[#fafafa]"
-							/>
 						</div>
+					{/if}
+
+					<div class="field">
+						<label for="create-name">Event name</label>
+						<input
+							id="create-name"
+							type="text"
+							placeholder="e.g. Bubble Tea Fundraiser"
+							bind:value={name}
+							disabled={isCreating}
+						/>
 					</div>
 
-					<div class="grid gap-4 sm:grid-cols-2">
-						<div>
-							<label for="create-emoji" class="mb-2 block text-[12px] font-medium text-[#666]">Emoji (optional)</label>
+					<div class="field-row">
+						<div class="field">
+							<label for="create-emoji">Emoji</label>
 							<input
 								id="create-emoji"
 								type="text"
@@ -120,40 +106,35 @@
 								placeholder="🎉"
 								bind:value={emoji}
 								disabled={isCreating}
-								class="h-10 w-full rounded-lg border border-[#e5e5e5] bg-white px-3 text-center text-[13px] text-[#1a1a1a] outline-none transition-all duration-200 placeholder:text-[#999] hover:border-[#ccc] focus:border-[#1a1a1a] focus:ring-4 focus:ring-[#1a1a1a]/5 disabled:bg-[#fafafa]"
+								class="emoji-input"
 							/>
 						</div>
-						<div>
-							<label for="create-ends" class="mb-2 block text-[12px] font-medium text-[#666]">End date (optional)</label>
+						<div class="field flex-1">
+							<label for="create-ends">End date</label>
 							<input
 								id="create-ends"
 								type="datetime-local"
 								bind:value={endsAt}
 								disabled={isCreating}
-								class="h-10 w-full rounded-lg border border-[#e5e5e5] bg-white px-3 text-[13px] text-[#1a1a1a] outline-none transition-all duration-200 hover:border-[#ccc] focus:border-[#1a1a1a] focus:ring-4 focus:ring-[#1a1a1a]/5 disabled:bg-[#fafafa]"
 							/>
 						</div>
 					</div>
 				</div>
 
-				<div class="mt-5 flex gap-3">
+				<div class="form-actions">
 					<button
 						type="submit"
 						disabled={isCreating || !name.trim() || (auth.isSuperuser && !councilId)}
-						class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1a1a1a] px-4 text-[13px] font-medium text-white transition-all duration-200 hover:bg-[#333] active:scale-[0.98] disabled:bg-[#e5e5e5] disabled:text-[#999]"
+						class="primary-btn"
 					>
 						{#if isCreating}
-							<span class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
-							Creating...
+							<span class="spinner"></span>
+							Creating
 						{:else}
 							Create event
 						{/if}
 					</button>
-					<button
-						type="button"
-						onclick={close}
-						class="h-10 rounded-lg border border-[#e5e5e5] bg-white px-4 text-[13px] font-medium text-[#666] transition-all duration-200 hover:border-[#ccc] hover:text-[#1a1a1a]"
-					>
+					<button type="button" onclick={close} class="ghost-btn">
 						Cancel
 					</button>
 				</div>
@@ -163,14 +144,254 @@
 </div>
 
 <style>
-	@keyframes slideDown {
+	.create-event-section {
+		margin: 28px 0 24px;
+	}
+
+	.new-event-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		height: 40px;
+		padding: 0 16px;
+		border: none;
+		border-radius: 10px;
+		background: #141413;
+		color: white;
+		font-family: 'DM Sans', sans-serif;
+		font-size: 13px;
+		font-weight: 500;
+		letter-spacing: -0.1px;
+		cursor: pointer;
+		transition: background 0.2s ease, transform 0.1s ease;
+	}
+
+	.new-event-btn:hover {
+		background: #2a2a28;
+	}
+
+	.new-event-btn:active {
+		transform: scale(0.97);
+	}
+
+	.create-form-card {
+		background: white;
+		border: 1.5px solid #ededeb;
+		border-radius: 14px;
+		overflow: hidden;
+		animation: formIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	.create-form-card form {
+		padding: 18px;
+	}
+
+	@media (min-width: 640px) {
+		.create-form-card form {
+			padding: 22px;
+		}
+	}
+
+	.form-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 18px;
+	}
+
+	.form-header h3 {
+		font-family: 'DM Sans', sans-serif;
+		font-size: 15px;
+		font-weight: 600;
+		color: #141413;
+		letter-spacing: -0.2px;
+	}
+
+	.close-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: #8a8a87;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.close-btn:hover {
+		background: #f0f0ed;
+		color: #5a5a57;
+	}
+
+	.form-fields {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+	}
+
+	.field-row {
+		display: flex;
+		gap: 10px;
+	}
+
+	.field {
+		flex: 1;
+	}
+
+	.flex-1 {
+		flex: 2;
+	}
+
+	.field label {
+		display: block;
+		font-family: 'DM Sans', sans-serif;
+		font-size: 12px;
+		font-weight: 500;
+		color: #8a8a87;
+		margin-bottom: 6px;
+		letter-spacing: -0.1px;
+	}
+
+	.field input,
+	.field .select-wrap select {
+		width: 100%;
+		height: 40px;
+		padding: 0 12px;
+		border: 1.5px solid #e2e2df;
+		border-radius: 9px;
+		background: white;
+		font-family: 'DM Sans', sans-serif;
+		font-size: 14px;
+		color: #141413;
+		outline: none;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease;
+		-webkit-appearance: none;
+	}
+
+	.field input::placeholder {
+		color: #b5b5b2;
+	}
+
+	.field input:hover:not(:disabled),
+	.field .select-wrap select:hover:not(:disabled) {
+		border-color: #c8c8c5;
+	}
+
+	.field input:focus,
+	.field .select-wrap select:focus {
+		border-color: #141413;
+		box-shadow: 0 0 0 3px rgba(20, 20, 19, 0.06);
+	}
+
+	.field input:disabled,
+	.field .select-wrap select:disabled {
+		background: #fafaf9;
+		color: #b5b5b2;
+	}
+
+	.emoji-input {
+		text-align: center;
+	}
+
+	.select-wrap {
+		position: relative;
+	}
+
+	.select-wrap select {
+		appearance: none;
+		padding-right: 28px;
+		cursor: pointer;
+	}
+
+	.select-icon {
+		position: absolute;
+		right: 10px;
+		top: 50%;
+		transform: translateY(-50%);
+		pointer-events: none;
+		color: #8a8a87;
+	}
+
+	.form-actions {
+		display: flex;
+		gap: 8px;
+		margin-top: 18px;
+	}
+
+	.primary-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		height: 40px;
+		padding: 0 16px;
+		border: none;
+		border-radius: 9px;
+		background: #141413;
+		color: white;
+		font-family: 'DM Sans', sans-serif;
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background 0.2s ease, transform 0.1s ease;
+	}
+
+	.primary-btn:hover:not(:disabled) {
+		background: #2a2a28;
+	}
+
+	.primary-btn:active:not(:disabled) {
+		transform: scale(0.97);
+	}
+
+	.primary-btn:disabled {
+		background: #e2e2df;
+		color: #b5b5b2;
+		cursor: not-allowed;
+	}
+
+	.ghost-btn {
+		height: 40px;
+		padding: 0 14px;
+		border: 1.5px solid #e2e2df;
+		border-radius: 9px;
+		background: transparent;
+		color: #5a5a57;
+		font-family: 'DM Sans', sans-serif;
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.ghost-btn:hover {
+		border-color: #c8c8c5;
+		color: #141413;
+	}
+
+	.spinner {
+		width: 14px;
+		height: 14px;
+		border: 2px solid rgba(255, 255, 255, 0.25);
+		border-top-color: white;
+		border-radius: 50%;
+		animation: spin 0.6s linear infinite;
+	}
+
+	@keyframes formIn {
 		from {
 			opacity: 0;
-			transform: translateY(-8px);
+			transform: translateY(-6px);
 		}
 		to {
 			opacity: 1;
 			transform: translateY(0);
 		}
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
 	}
 </style>

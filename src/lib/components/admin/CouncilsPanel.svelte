@@ -33,51 +33,54 @@
 	}
 </script>
 
-<div class="rounded-xl border border-[#e5e5e5] bg-white">
-	<div class="flex items-center justify-between border-b border-[#e5e5e5] px-5 py-4">
-		<h3 class="text-[14px] font-semibold text-[#1a1a1a]">Councils</h3>
-		<button
-			onclick={() => (isOpen = !isOpen)}
-			class="rounded-md px-2.5 py-1 text-[12px] font-medium text-[#666] transition-all duration-200 hover:bg-[#f5f5f5] hover:text-[#1a1a1a]"
-		>
+<div class="panel">
+	<div class="panel-header">
+		<h3>Councils</h3>
+		<button onclick={() => (isOpen = !isOpen)} class="toggle-btn">
 			{isOpen ? 'Cancel' : '+ Add'}
 		</button>
 	</div>
 
 	{#if isOpen}
-		<form onsubmit={(e) => { e.preventDefault(); handleCreate(); }} class="border-b border-[#e5e5e5] p-4" style="animation: fadeIn 0.15s ease-out">
-			<div class="flex gap-2">
+		<form onsubmit={(e) => { e.preventDefault(); handleCreate(); }} class="panel-form">
+			<div class="form-row">
 				<input
 					type="text"
 					placeholder="Council name"
 					bind:value={newName}
 					disabled={isCreating}
-					class="h-9 flex-1 rounded-lg border border-[#e5e5e5] bg-white px-3 text-[13px] outline-none transition-all duration-200 placeholder:text-[#999] hover:border-[#ccc] focus:border-[#1a1a1a] focus:ring-4 focus:ring-[#1a1a1a]/5 disabled:bg-[#fafafa]"
 				/>
-				<button
-					type="submit"
-					disabled={isCreating || !newName.trim()}
-					class="h-9 rounded-lg bg-[#1a1a1a] px-4 text-[13px] font-medium text-white transition-all duration-200 hover:bg-[#333] active:scale-[0.98] disabled:bg-[#e5e5e5] disabled:text-[#999]"
-				>
-					{isCreating ? '...' : 'Add'}
+				<button type="submit" disabled={isCreating || !newName.trim()} class="add-btn">
+					{#if isCreating}
+						<span class="spinner"></span>
+					{:else}
+						Add
+					{/if}
 				</button>
 			</div>
 		</form>
 	{/if}
 
-	<div class="divide-y divide-[#e5e5e5]">
+	<div class="panel-list">
 		{#if dashboard.councils.length === 0}
-			<p class="px-5 py-6 text-center text-[13px] text-[#888]">No councils yet</p>
+			<p class="empty">No councils yet</p>
 		{:else}
 			{#each dashboard.councils as council (council.id)}
-				<div class="group flex items-center justify-between px-5 py-3 transition-colors duration-150 hover:bg-[#fafafa]">
-					<span class="text-[13px] font-medium text-[#1a1a1a]">{council.name}</span>
+				<div class="list-item" class:deleting={deletingId === council.id}>
+					<span class="item-name">{council.name}</span>
 					<button
 						onclick={() => handleDelete(council.id)}
 						disabled={deletingId === council.id}
-						class="rounded-md px-2 py-1 text-[12px] text-[#999] opacity-0 transition-all duration-200 hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 disabled:opacity-50"
+						class="delete-btn"
+						aria-label="Delete council"
 					>
-						{deletingId === council.id ? '...' : 'Delete'}
+						{#if deletingId === council.id}
+							<span class="spinner-sm"></span>
+						{:else}
+							<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+								<path d="M2 4h10M5 4V2.5a1 1 0 011-1h2a1 1 0 011 1V4M11 4v7.5a1.5 1.5 0 01-1.5 1.5h-5A1.5 1.5 0 013 11.5V4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						{/if}
 					</button>
 				</div>
 			{/each}
@@ -86,8 +89,212 @@
 </div>
 
 <style>
+	.panel {
+		background: white;
+		border: 1.5px solid #ededeb;
+		border-radius: 14px;
+		overflow: hidden;
+	}
+
+	.panel-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 14px 16px;
+		border-bottom: 1.5px solid #ededeb;
+	}
+
+	.panel-header h3 {
+		font-family: 'DM Sans', sans-serif;
+		font-size: 14px;
+		font-weight: 600;
+		color: #141413;
+		letter-spacing: -0.2px;
+	}
+
+	.toggle-btn {
+		border: none;
+		background: transparent;
+		font-family: 'DM Sans', sans-serif;
+		font-size: 12px;
+		font-weight: 500;
+		color: #5a5a57;
+		padding: 4px 10px;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.toggle-btn:hover {
+		background: #f0f0ed;
+		color: #141413;
+	}
+
+	.panel-form {
+		padding: 12px 16px;
+		border-bottom: 1.5px solid #ededeb;
+		animation: fadeIn 0.15s ease-out;
+	}
+
+	.form-row {
+		display: flex;
+		gap: 8px;
+	}
+
+	.form-row input {
+		flex: 1;
+		height: 36px;
+		padding: 0 12px;
+		border: 1.5px solid #e2e2df;
+		border-radius: 8px;
+		background: white;
+		font-family: 'DM Sans', sans-serif;
+		font-size: 13px;
+		color: #141413;
+		outline: none;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	}
+
+	.form-row input::placeholder {
+		color: #b5b5b2;
+	}
+
+	.form-row input:focus {
+		border-color: #141413;
+		box-shadow: 0 0 0 3px rgba(20, 20, 19, 0.06);
+	}
+
+	.form-row input:disabled {
+		background: #fafaf9;
+	}
+
+	.add-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 36px;
+		padding: 0 14px;
+		border: none;
+		border-radius: 8px;
+		background: #141413;
+		color: white;
+		font-family: 'DM Sans', sans-serif;
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background 0.15s ease, transform 0.1s ease;
+	}
+
+	.add-btn:hover:not(:disabled) {
+		background: #2a2a28;
+	}
+
+	.add-btn:active:not(:disabled) {
+		transform: scale(0.97);
+	}
+
+	.add-btn:disabled {
+		background: #e2e2df;
+		color: #b5b5b2;
+		cursor: not-allowed;
+	}
+
+	.panel-list {
+		max-height: 240px;
+		overflow-y: auto;
+	}
+
+	.empty {
+		padding: 24px 16px;
+		text-align: center;
+		font-family: 'DM Sans', sans-serif;
+		font-size: 13px;
+		color: #8a8a87;
+	}
+
+	.list-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 10px 16px;
+		border-bottom: 1px solid #f0f0ed;
+		transition: background 0.1s ease, opacity 0.2s ease;
+	}
+
+	.list-item:last-child {
+		border-bottom: none;
+	}
+
+	.list-item:hover {
+		background: #fafaf9;
+	}
+
+	.list-item.deleting {
+		opacity: 0.5;
+	}
+
+	.item-name {
+		font-family: 'DM Sans', sans-serif;
+		font-size: 13px;
+		font-weight: 500;
+		color: #141413;
+	}
+
+	.delete-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border: none;
+		border-radius: 7px;
+		background: transparent;
+		color: #b5b5b2;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		opacity: 0;
+	}
+
+	.list-item:hover .delete-btn {
+		opacity: 1;
+	}
+
+	.delete-btn:hover:not(:disabled) {
+		background: #fef2f2;
+		color: #dc2626;
+	}
+
+	/* Always show on touch devices */
+	@media (hover: none) {
+		.delete-btn {
+			opacity: 1;
+		}
+	}
+
+	.spinner {
+		width: 14px;
+		height: 14px;
+		border: 2px solid rgba(255, 255, 255, 0.25);
+		border-top-color: white;
+		border-radius: 50%;
+		animation: spin 0.6s linear infinite;
+	}
+
+	.spinner-sm {
+		width: 12px;
+		height: 12px;
+		border: 1.5px solid #e2e2df;
+		border-top-color: #8a8a87;
+		border-radius: 50%;
+		animation: spin 0.6s linear infinite;
+	}
+
 	@keyframes fadeIn {
 		from { opacity: 0; }
 		to { opacity: 1; }
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
 	}
 </style>
