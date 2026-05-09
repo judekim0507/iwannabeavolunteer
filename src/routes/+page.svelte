@@ -1,6 +1,7 @@
 <script lang="ts">
     import { supabase, type Event, type Council } from "$lib/supabase";
     import { APP_VERSION } from "$lib/appVersion";
+    import { haptic } from "$lib/haptics";
     import { onMount } from "svelte";
 
     let fullName = $state("");
@@ -300,6 +301,7 @@
         if (existingVolunteers && existingVolunteers.length > 0) {
             isDuplicate = true;
             submitting = false;
+            haptic("error");
             return;
         }
 
@@ -313,6 +315,7 @@
 
         if (err) {
             error = err.message;
+            haptic("error");
             return;
         }
 
@@ -321,6 +324,7 @@
         isDuplicate = false;
         fullName = "";
         hasVolunteeredBefore = null;
+        haptic("success");
     }
 
     function calculateTimeRemaining() {
@@ -458,13 +462,14 @@
 
                     <button
                         type="button"
-                        class="font-['Nunito'] font-black text-[32px] leading-none tracking-[-0.02em] text-[#020202] bg-transparent border-0 p-0 text-left cursor-default"
+                        class="font-['Nunito'] font-black text-[32px] leading-none tracking-[-0.02em] text-[#020202] bg-transparent border-0 p-0 text-left cursor-default origin-left motion-safe:active:scale-[0.97] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:duration-75 active:ease-out"
                         ontouchstart={(e) => {
                             let timer: NodeJS.Timeout;
                             function clear() {
                                 if (timer) clearTimeout(timer);
                             }
                             timer = setTimeout(() => {
+                                haptic("nudge");
                                 window.location.href = "/admin";
                             }, 1200);
                             const up: EventListener = () => {
@@ -481,6 +486,7 @@
                                 if (timer) clearTimeout(timer);
                             }
                             timer = setTimeout(() => {
+                                haptic("nudge");
                                 window.location.href = "/admin";
                             }, 1200);
                             const up: EventListener = () => {
@@ -520,13 +526,14 @@
                                 >
                                 <select
                                     id="council-select"
-                                    class="h-16 w-full appearance-none rounded-[73px] border-[3px] border-[#fba24d] border-b-[5px] bg-[#ffeedd] px-6 font-['Nunito'] text-[18px] tracking-[-0.02em] text-[#333] outline-none transition focus:border-[#fba24d] disabled:opacity-60"
+                                    class="h-16 w-full appearance-none rounded-[73px] border-[3px] border-[#fba24d] border-b-[5px] bg-[#ffeedd] px-6 font-['Nunito'] text-[18px] tracking-[-0.02em] text-[#333] outline-none transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:duration-75 active:ease-out focus:border-[#fba24d] focus-visible:ring-4 focus-visible:ring-[#fba24d]/25 disabled:opacity-60 motion-safe:active:translate-y-[2px] active:border-b-[3px]"
                                     bind:value={selectedCouncilId}
                                     disabled={isEventLoading}
                                     onchange={async (event) => {
                                         const value = (
                                             event.currentTarget as HTMLSelectElement
                                         ).value;
+                                        haptic(8);
                                         await selectCouncil(value);
                                     }}
                                 >
@@ -597,8 +604,9 @@
                             </p>
                             <button
                                 type="button"
-                                class="mx-auto mt-2 inline-flex h-12 items-center justify-center rounded-[73px] border-[3px] border-[#f2f2f2] bg-white px-6 font-['Nunito'] font-bold text-[16px] text-[#333] hover:bg-[#f8f8f8] transition"
+                                class="mx-auto mt-2 inline-flex h-12 items-center justify-center rounded-[73px] border-[3px] border-[#f2f2f2] border-b-[5px] bg-white px-6 font-['Nunito'] font-bold text-[16px] text-[#333] hover:bg-[#f8f8f8] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:duration-75 active:ease-out motion-safe:active:translate-y-[2px] active:border-b-[3px] focus-visible:ring-4 focus-visible:ring-[#fba24d]/25 outline-none cursor-pointer"
                                 onclick={() => {
+                                    haptic(10);
                                     isDuplicate = false;
                                     fullName = "";
                                     hasVolunteeredBefore = null;
@@ -696,10 +704,11 @@
                                     >
                                     <select
                                         id="event-select"
-                                        class="h-16 w-full appearance-none rounded-[73px] border-[3px] border-[#fba24d] border-b-[5px] bg-[#ffeedd] px-6 font-['Nunito'] font-bold text-[18px] tracking-[-0.02em] text-[#333] outline-none transition focus:border-[#fba24d] disabled:opacity-60"
+                                        class="h-16 w-full appearance-none rounded-[73px] border-[3px] border-[#fba24d] border-b-[5px] bg-[#ffeedd] px-6 font-['Nunito'] font-bold text-[18px] tracking-[-0.02em] text-[#333] outline-none transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:duration-75 active:ease-out focus:border-[#fba24d] focus-visible:ring-4 focus-visible:ring-[#fba24d]/25 disabled:opacity-60 motion-safe:active:translate-y-[2px] active:border-b-[3px]"
                                         bind:value={selectedEventId}
                                         onchange={(event) => {
                                             const value = (event.currentTarget as HTMLSelectElement).value;
+                                            haptic(8);
                                             selectedEventId = value;
                                             syncSubmittedState(value);
                                             fullName = "";
@@ -770,9 +779,11 @@
                                     class="h-16 flex-1 rounded-[73px] border-[3px] cursor-pointer outline-none {hasVolunteeredBefore ===
                                     true
                                         ? 'border-[#fba24d] bg-[#ffeedd]'
-                                        : 'border-[#f2f2f2] border-b-[5px] bg-white'} px-[44px] font-['Nunito'] font-black text-[18px] text-[#333] hover:opacity-80 transition"
-                                    onclick={() =>
-                                        (hasVolunteeredBefore = true)}
+                                        : 'border-[#f2f2f2] border-b-[5px] bg-white'} px-[44px] font-['Nunito'] font-black text-[18px] text-[#333] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:duration-75 active:ease-out motion-safe:active:translate-y-[2px] active:border-b-[3px] focus-visible:ring-4 focus-visible:ring-[#fba24d]/25"
+                                    onclick={() => {
+                                        haptic(10);
+                                        hasVolunteeredBefore = true;
+                                    }}
                                 >
                                     Yes
                                 </button>
@@ -781,9 +792,11 @@
                                     class="h-16 flex-1 rounded-[73px] border-[3px] cursor-pointer outline-none {hasVolunteeredBefore ===
                                     false
                                         ? 'border-[#fba24d] bg-[#ffeedd]'
-                                        : 'border-[#f2f2f2] border-b-[5px] bg-white'} px-[44px] font-['Nunito'] font-black text-[18px] text-[#333] hover:opacity-80 transition"
-                                    onclick={() =>
-                                        (hasVolunteeredBefore = false)}
+                                        : 'border-[#f2f2f2] border-b-[5px] bg-white'} px-[44px] font-['Nunito'] font-black text-[18px] text-[#333] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:duration-75 active:ease-out motion-safe:active:translate-y-[2px] active:border-b-[3px] focus-visible:ring-4 focus-visible:ring-[#fba24d]/25"
+                                    onclick={() => {
+                                        haptic(10);
+                                        hasVolunteeredBefore = false;
+                                    }}
                                 >
                                     No
                                 </button>
@@ -806,7 +819,7 @@
                                     placeholder="Your name"
                                     class="h-16 w-full rounded-[73px] border-[3px] {fullName.trim()
                                         ? 'border-[#fba24d] bg-[#ffeedd]'
-                                        : 'border-[#f2f2f2] bg-white'} border-b-[5px] px-6 font-['Nunito'] text-[18px] tracking-[-0.02em] text-[#333] placeholder:opacity-30 outline-none transition-all duration-200"
+                                        : 'border-[#f2f2f2] bg-white'} border-b-[5px] px-6 font-['Nunito'] text-[18px] tracking-[-0.02em] text-[#333] placeholder:opacity-30 outline-none transition-all duration-200 focus:border-[#fba24d] focus:ring-4 focus:ring-[#fba24d]/25"
                                     bind:value={fullName}
                                 />
                             </div>
@@ -815,7 +828,7 @@
                         <div class="space-y-3 text-center">
                             <button
                                 type="button"
-                                class="w-full h-16 rounded-[73px] border-[3px] border-[#4dfb59] bg-[#e2ffdd] px-[44px] flex items-center justify-center gap-2 text-[#333] font-['Nunito'] font-black text-[18px] hover:bg-[#d4f5cc] transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer outline-none"
+                                class="w-full h-16 rounded-[73px] border-[3px] border-[#4dfb59] border-b-[5px] bg-[#e2ffdd] px-[44px] flex items-center justify-center gap-2 text-[#333] font-['Nunito'] font-black text-[18px] hover:bg-[#d4f5cc] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:duration-75 active:ease-out disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 cursor-pointer outline-none motion-safe:active:translate-y-[2px] active:border-b-[3px] focus-visible:ring-4 focus-visible:ring-[#4dfb59]/40"
                                 onclick={onSubmit}
                                 disabled={!fullName.trim() ||
                                     hasVolunteeredBefore === null ||
