@@ -841,7 +841,7 @@
                                     class="font-['Inter'] text-[14px] text-[#999]"
                                 >
                                     Built by <a
-                                        href="https://www.judekim.ca/"
+                                        href="https://www.judekim.com/"
                                         class="underline hover:text-[#333]"
                                         >Jude Kim</a
                                     >
